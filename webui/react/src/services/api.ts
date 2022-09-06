@@ -1,4 +1,5 @@
 import { terminalCommandStates } from 'constants/states';
+import { TrialsCollection } from 'pages/TrialsComparison/Collections/collections';
 import * as Api from 'services/api-ts-sdk';
 import * as Config from 'services/apiConfig';
 import * as Service from 'services/types';
@@ -137,6 +138,19 @@ export const updateJobQueue = generateDetApi<
   Api.V1UpdateJobQueueResponse,
   Api.V1UpdateJobQueueResponse
 >(Config.updateJobQueue);
+
+/* Trials */
+export const queryTrials = generateDetApi(Config.queryTrials);
+
+export const patchTrials = generateDetApi(Config.patchTrials);
+
+export const createTrialsCollection = generateDetApi(Config.createTrialCollection);
+
+export const getTrialsCollections = generateDetApi(Config.getTrialsCollections);
+
+export const patchTrialsCollection = generateDetApi(Config.patchTrialsCollection);
+
+export const deleteTrialsCollection = generateDetApi(Config.deleteTrialsCollection);
 
 /* Experiments */
 

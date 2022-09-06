@@ -1,11 +1,11 @@
 import { Alert, Tabs } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 
 import Link from 'components/Link';
 import { terminalRunStates } from 'constants/states';
 import { useStore } from 'contexts/Store';
-import useMetricNames from 'hooks/useMetricNames';
+import useMetrics from 'hooks/useMetricNames';
 import useStorage from 'hooks/useStorage';
 import { paths } from 'routes/utils';
 import {
@@ -19,8 +19,8 @@ import Spinner from 'shared/components/Spinner/Spinner';
 import { hasObjectKeys } from 'shared/utils/data';
 import { alphaNumericSorter } from 'shared/utils/sort';
 import {
-  ExperimentBase, ExperimentSearcherName, ExperimentVisualizationType,
-  HpImportanceMap, HpImportanceMetricMap, HyperparameterType, MetricName, MetricType, RunState,
+  ExperimentBase, ExperimentSearcherName,
+  HpImportanceMap, HpImportanceMetricMap, HyperparameterType, Metric, MetricType, RunState,
   Scale,
 } from 'types';
 
@@ -35,6 +35,12 @@ import HpParallelCoordinates from './ExperimentVisualization/HpParallelCoordinat
 import HpScatterPlots from './ExperimentVisualization/HpScatterPlots';
 import LearningCurve from './ExperimentVisualization/LearningCurve';
 
+export enum ExperimentVisualizationType {
+  HpParallelCoordinates = 'hp-parallel-coordinates',
+  HpHeatMap = 'hp-heat-map',
+  HpScatterPlots = 'hp-scatter-plots',
+  LearningCurve = 'learning-curve',
+}
 interface Props {
   basePath: string;
   experiment: ExperimentBase;
@@ -76,16 +82,18 @@ const getHpImportanceMap = (
 const ExperimentVisualization: React.FC<Props> = ({
   basePath,
   experiment,
-  type,
+
 }: Props) => {
   const { ui } = useStore();
   const history = useHistory();
   const location = useLocation();
   const storage = useStorage(`${STORAGE_PATH}/${experiment.id}`);
-  const searcherMetric = useRef<MetricName>({
+  const searcherMetric = useRef<Metric>({
     name: experiment.config.searcher.metric,
     type: MetricType.Validation,
   });
+
+  const { viz: type } = useParams<{viz: ExperimentVisualizationType}>();
   const fullHParams = useRef<string[]>(
     (Object.keys(experiment.hyperparameters || {}).filter((key) => {
       // Constant hyperparameters are not useful for visualizations.
@@ -109,23 +117,23 @@ const ExperimentVisualization: React.FC<Props> = ({
     return type && TYPE_KEYS.includes(type) ? type : DEFAULT_TYPE_KEY;
   });
   const [ filters, setFilters ] = useState<VisualizationFilters>(initFilters);
-  const [ activeMetric, setActiveMetric ] = useState<MetricName>(initFilters.metric);
+  const [ activeMetric, setActiveMetric ] = useState<Metric>(initFilters.metric);
   const [ batches, setBatches ] = useState<number[]>();
-  const [ metricNames, setMetricNames ] = useState<MetricName[]>([]);
+  const [ metrics, setMetrics ] = useState<Metric[]>([]);
   const [ hpImportanceMap, setHpImportanceMap ] = useState<HpImportanceMap>();
   const [ pageError, setPageError ] = useState<PageError>();
 
   const { hasData, hasLoaded, isExperimentTerminal, isSupported } = useMemo(() => {
     return {
-      hasData: batches && batches.length !== 0 && metricNames && metricNames.length !== 0,
-      hasLoaded: batches && metricNames,
+      hasData: batches && batches.length !== 0 && metrics && metrics.length !== 0,
+      hasLoaded: batches && metrics,
       isExperimentTerminal: terminalRunStates.has(experiment.state),
       isSupported: ![
         ExperimentSearcherName.Single,
         ExperimentSearcherName.Pbt,
       ].includes(experiment.config.searcher.name),
     };
-  }, [ batches, experiment, metricNames ]);
+  }, [ batches, experiment, metrics ]);
 
   const hpImportance = useMemo(() => {
     if (!hpImportanceMap) return {};
@@ -141,7 +149,7 @@ const ExperimentVisualization: React.FC<Props> = ({
     storage.remove(STORAGE_FILTERS_KEY);
   }, [ storage ]);
 
-  const handleMetricChange = useCallback((metric: MetricName) => {
+  const handleMetricChange = useCallback((metric: Metric) => {
     setActiveMetric(metric);
   }, []);
 
@@ -160,13 +168,13 @@ const ExperimentVisualization: React.FC<Props> = ({
   }, [ basePath, history, location, type, typeKey ]);
 
   // Stream available metrics.
-  useMetricNames({
+  useMetrics({
     errorHandler: () => {
       setPageError(PageError.MetricNames);
     },
     experimentId: experiment.id,
-    metricNames,
-    setMetricNames,
+    metrics,
+    setMetrics,
   });
 
   useEffect(() => {
@@ -191,7 +199,7 @@ const ExperimentVisualization: React.FC<Props> = ({
     });
 
     return () => canceler.abort();
-  }, [ experiment.id, filters?.metric, isSupported, metricNames, ui.isPageHidden ]);
+  }, [ experiment.id, filters?.metric, isSupported, metrics, ui.isPageHidden ]);
 
   // Stream available batches.
   useEffect(() => {
@@ -235,12 +243,12 @@ const ExperimentVisualization: React.FC<Props> = ({
   // Validate active metric against metrics.
   useEffect(() => {
     setActiveMetric((prev) => {
-      const activeMetricFound = metricNames.reduce((acc, metric) => {
+      const activeMetricFound = metrics.reduce((acc, metric) => {
         return acc || (metric.type === prev.type && metric.name === prev.name);
       }, false);
       return activeMetricFound ? prev : searcherMetric.current;
     });
-  }, [ metricNames ]);
+  }, [ metrics ]);
 
   // Update default filter hParams if not previously set.
   useEffect(() => {
@@ -303,7 +311,7 @@ const ExperimentVisualization: React.FC<Props> = ({
       filters={filters}
       fullHParams={fullHParams.current}
       hpImportance={hpImportance}
-      metrics={metricNames}
+      metrics={metrics}
       type={typeKey}
       onChange={handleFiltersChange}
       onMetricChange={handleMetricChange}

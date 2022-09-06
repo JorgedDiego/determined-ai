@@ -42,6 +42,7 @@ export interface Settings {
 }
 
 export const settingsConfig: SettingsConfig = {
+  applicableRoutespace: '/experiments',
   settings: [
     {
       defaultValue: undefined,

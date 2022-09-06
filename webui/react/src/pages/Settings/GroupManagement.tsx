@@ -1,10 +1,10 @@
 import { Button, Dropdown, Menu, message, Space, Table } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import InteractiveTable, { InteractiveTableSettings,
-  onRightClickableCell } from 'components/InteractiveTable';
 import Page from 'components/Page';
-import { defaultRowClassName, getFullPaginationConfig } from 'components/Table';
+import InteractiveTable, { InteractiveTableSettings,
+  onRightClickableCell } from 'components/Table/InteractiveTable';
+import { defaultRowClassName, getFullPaginationConfig } from 'components/Table/Table';
 import useModalCreateGroup from 'hooks/useModal/UserSettings/useModalCreateGroup';
 import useModalDeleteGroup from 'hooks/useModal/UserSettings/useModalDeleteGroup';
 import useSettings, { UpdateSettings } from 'hooks/useSettings';

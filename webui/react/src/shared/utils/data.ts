@@ -2,15 +2,25 @@
 import { Primitive, RawJson, RecordKey, UnknownRecord } from '../types';
 
 // `bigint` is not support yet for
+
+export const isThing = (data: unknown): boolean => !isNullOrUndefined(data);
 export const isBigInt = (data: unknown): data is bigint => typeof data === 'bigint';
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isDate = (data: unknown): data is Date => data instanceof Date;
 export const isMap = (data: unknown): boolean => data instanceof Map;
 export const isNullOrUndefined = (data: unknown): data is null | undefined => data == null;
-export const isNumber = (data: unknown): data is number => typeof data === 'number';
+export const isNumber = (data: unknown): data is number =>
+  typeof data === 'number' && !Number.isNaN(data);
 export const isObject = (data: unknown): boolean => {
   return typeof data === 'object' && !Array.isArray(data) && !isSet(data) && data !== null;
 };
+
+export const numberElseUndefined = (data: string | undefined): number | undefined => {
+  if (data === undefined) return undefined;
+  const x = parseFloat(data);
+  return isNumber(x) ? x : undefined;
+};
+
 export const isPrimitive = (data: unknown): boolean => (
   isBigInt(data) ||
   isBoolean(data) ||
@@ -61,7 +71,14 @@ export const clone = (data: any, deep = true): any => {
   if (isPrimitive(data)) return data;
   if (isMap(data)) return new Map(data);
   if (isSet(data)) return new Set(data);
-  return deep ? JSON.parse(JSON.stringify(data)) : { ...data };
+  return deep ? JSON.parse(
+    JSON.stringify(
+      data,
+      (_key, value) => (isSet(value) ? [ ...value ] : value),
+    ),
+    (key, value) => (isSet(data[key]) ? new Set(value) : value),
+  // The above is necessary for objects containing Sets because JSON.stringify(new Set()) === "{}"
+  ) : { ...data };
 };
 
 export const hasObjectKeys = (data: unknown): boolean => {

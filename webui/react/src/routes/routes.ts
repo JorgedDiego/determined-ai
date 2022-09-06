@@ -22,14 +22,14 @@ const routes: RouteConfig[] = [
   {
     id: 'projectDetails',
     needAuth: true,
-    path: '/projects/:projectId',
+    path: '/projects/:projectId/:tab',
     title: 'Project',
   },
   {
     icon: 'experiment',
     id: 'uncategorized',
     needAuth: true,
-    path: '/projects/1',
+    path: '/projects/1/experiments',
     title: 'Uncategorized',
   },
   {
@@ -66,12 +66,6 @@ const routes: RouteConfig[] = [
     id: 'experimentDetails',
     needAuth: true,
     path: '/experiments/:experimentId/:tab',
-    title: 'Experiment',
-  },
-  {
-    id: 'experimentComparison',
-    needAuth: true,
-    path: '/experiment-compare',
     title: 'Experiment',
   },
   {
