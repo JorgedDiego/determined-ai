@@ -38,7 +38,7 @@ export const useFetchTrials = ({
       handleError(e, { publicSubject: 'Unable to fetch trials.' });
     }
     const newTrials = decodeTrialsWithMetadata(response);
-    setTrials(newTrials);
+    setTrials({ ...newTrials, ids: newTrials.ids.slice(0, limit) });
 
   }, [ filters, limit, offset, sorter ]);
 
