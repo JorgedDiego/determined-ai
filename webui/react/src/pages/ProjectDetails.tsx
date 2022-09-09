@@ -85,17 +85,17 @@ const ProjectDetails: React.FC = () => {
   usePolling(fetchProject, { rerunOnNewFn: true });
   usePolling(fetchWorkspace, { rerunOnNewFn: true });
 
-  if (project?.immutable) {
-    return (
-      <div className={css.base}>
-        <PageHeader
-          className={css.header}
-          title="Uncategorized"
-        />
-        <ExperimentList project={project} />
-      </div>
-    );
-  }
+  // if (project?.immutable) {
+  //   return (
+  //     <div className={css.base}>
+  //       <PageHeader
+  //         className={css.header}
+  //         title="Uncategorized"
+  //       />
+  //       <ExperimentList project={project} />
+  //     </div>
+  //   );
+  // }
 
   if (isNaN(id)) {
     return <Message title={`Invalid Project ID ${projectId}`} />;
@@ -154,22 +154,26 @@ const ProjectDetails: React.FC = () => {
             <ExperimentList project={project} />
           </div>
         </TabPane>
-        <TabPane
-          className={css.tabPane}
-          key="trials"
-          tab="Trials">
-          <div className={css.base}>
-            <TrialsComparison projectId={projectId} />
-          </div>
-        </TabPane>
-        <TabPane
-          className={css.tabPane}
-          key="notes"
-          tab="Notes">
-          <div className={css.base}>
-            <ProjectNotes fetchProject={fetchProject} project={project} />
-          </div>
-        </TabPane>
+        {!project.immutable && (
+          <>
+            <TabPane
+              className={css.tabPane}
+              key="trials"
+              tab="Trials">
+              <div className={css.base}>
+                <TrialsComparison projectId={projectId} />
+              </div>
+            </TabPane>
+            <TabPane
+              className={css.tabPane}
+              key="notes"
+              tab="Notes">
+              <div className={css.base}>
+                <ProjectNotes fetchProject={fetchProject} project={project} />
+              </div>
+            </TabPane>
+          </>
+        )}
       </DynamicTabs>
     </Page>
   );
