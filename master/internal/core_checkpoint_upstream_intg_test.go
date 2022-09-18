@@ -91,21 +91,19 @@ func checkTgz(t *testing.T, content io.Reader, id string) {
 	require.NoError(t, err, "failed to create a gzip reader")
 	tr := tar.NewReader(zr)
 	gotMap := make(map[string]string)
-	prefix := S3_TEST_PREFIX + "/" + id + "/"
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
 			break // End of archive
 		}
 		require.NoError(t, err, "failed to read record header")
-		pathname := strings.TrimPrefix(hdr.Name, prefix)
 		buf := &strings.Builder{}
 		if hdr.Size > 0 {
 			_, err := io.Copy(buf, tr)
 			_, err = io.Copy(os.Stdout, tr)
 			require.NoError(t, err, "failed to read content of file", hdr.Name)
 		}
-		gotMap[pathname] = buf.String()
+		gotMap[hdr.Name] = buf.String()
 	}
 	require.Equal(t, mockCheckpointContent, gotMap)
 }
